@@ -1,12 +1,16 @@
 <template>
   <div class="App">
     <h1>Страница постов</h1>
-    <TealButton @click="showDialog">Создать пост</TealButton>
+    <div class="app__btns">
+      <TealButton @click="showDialog">Создать пост</TealButton>
+      <MySelect v-model="selectedSort" :options="sortOptions" />
+    </div>
+
     <MyDialog v-model:show="dialogVisible" style="margine: 15px">
       <PostForm @create="createPost" />
     </MyDialog>
 
-    <PostList :posts="posts" @remove="removePost" />
+    <PostList :posts="sortedPosts" @remove="removePost" />
   </div>
 </template>
 
@@ -25,6 +29,11 @@ export default {
     return {
       posts: [],
       dialogVisible: false,
+      selectedSort: '',
+      sortOptions: [
+        { value: 'title', name: 'По названию' },
+        { value: 'body', name: 'По содержимому' },
+      ],
     }
   },
 
@@ -37,12 +46,15 @@ export default {
     inputTitle(e) {
       this.title = e.target.value
     },
+
     removePost(post) {
       this.posts = this.posts.filter(p => p.id !== post.id)
     },
+
     showDialog() {
       this.dialogVisible = true
     },
+
     async fetchPosts() {
       try {
         const response = await axios(
@@ -54,8 +66,17 @@ export default {
       }
     },
   },
+
   mounted() {
     this.fetchPosts()
+  },
+
+  computed: {
+    sortedPosts() {
+      return [...this.posts].sort((post1, post2) =>
+        post1[this.selectedSort]?.localeCompare(post2[this.selectedSort])
+      )
+    },
   },
 }
 </script>
@@ -74,5 +95,10 @@ export default {
 form {
   display: flex;
   flex-direction: column;
+}
+
+.app__btns {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
